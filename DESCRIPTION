@@ -13,4 +13,5 @@ LinkingTo:
     Rcpp
 Imports:
     Rcpp,
-    kohonen
+    kohonen,
+    ellipse

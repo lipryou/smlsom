@@ -119,18 +119,19 @@ BEGIN_RCPP
 END_RCPP
 }
 // eval_without
-List eval_without(int target_m, NumericMatrix data, List parameters, IntegerVector classes, NumericVector llconst, int dtype);
-RcppExport SEXP _smlsom_eval_without(SEXP target_mSEXP, SEXP dataSEXP, SEXP parametersSEXP, SEXP classesSEXP, SEXP llconstSEXP, SEXP dtypeSEXP) {
+List eval_without(int target_m, NumericMatrix data, IntegerVector search_mrange, List parameters, IntegerVector classes, NumericVector llconst, int dtype);
+RcppExport SEXP _smlsom_eval_without(SEXP target_mSEXP, SEXP dataSEXP, SEXP search_mrangeSEXP, SEXP parametersSEXP, SEXP classesSEXP, SEXP llconstSEXP, SEXP dtypeSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< int >::type target_m(target_mSEXP);
     Rcpp::traits::input_parameter< NumericMatrix >::type data(dataSEXP);
+    Rcpp::traits::input_parameter< IntegerVector >::type search_mrange(search_mrangeSEXP);
     Rcpp::traits::input_parameter< List >::type parameters(parametersSEXP);
     Rcpp::traits::input_parameter< IntegerVector >::type classes(classesSEXP);
     Rcpp::traits::input_parameter< NumericVector >::type llconst(llconstSEXP);
     Rcpp::traits::input_parameter< int >::type dtype(dtypeSEXP);
-    rcpp_result_gen = Rcpp::wrap(eval_without(target_m, data, parameters, classes, llconst, dtype));
+    rcpp_result_gen = Rcpp::wrap(eval_without(target_m, data, search_mrange, parameters, classes, llconst, dtype));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -330,7 +331,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_smlsom_loglikelihood", (DL_FUNC) &_smlsom_loglikelihood, 4},
     {"_smlsom_classification_loglikelihood", (DL_FUNC) &_smlsom_classification_loglikelihood, 5},
     {"_smlsom_loglikelihood_const", (DL_FUNC) &_smlsom_loglikelihood_const, 2},
-    {"_smlsom_eval_without", (DL_FUNC) &_smlsom_eval_without, 6},
+    {"_smlsom_eval_without", (DL_FUNC) &_smlsom_eval_without, 7},
     {"_smlsom_model_test1", (DL_FUNC) &_smlsom_model_test1, 1},
     {"_smlsom_model_test2", (DL_FUNC) &_smlsom_model_test2, 3},
     {"_smlsom_model_test3", (DL_FUNC) &_smlsom_model_test3, 5},

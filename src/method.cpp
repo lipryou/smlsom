@@ -6,11 +6,14 @@
 
 // [[Rcpp::export]]
 List eval_without(int target_m, NumericMatrix data,
-                  List parameters, IntegerVector classes,
-                  NumericVector llconst, int dtype) {
+                  IntegerVector search_mrange, List parameters,
+                  IntegerVector classes, NumericVector llconst, int dtype) {
+  // nsubc, cumnsubc should be recalculated.
   int M = parameters["M"];
   int Mhat = M-1;
   int p = data.ncol();
+  int start_m = search_mrange[0];
+  int end_m = search_mrange[1];
 
   model_class mclass = match_model_class(dtype);
 
@@ -20,7 +23,7 @@ List eval_without(int target_m, NumericMatrix data,
   model** mlist_c = model_drop_copy(mlist, mclass, M, target_m, p);
 
   // redistribute
-  IntegerVector classes_c = redistribute(data, mlist_c, classes, target_m, Mhat);
+  IntegerVector classes_c = redistribute(data, mlist_c, classes, target_m, start_m, end_m);
 
   // update
   model_batch(data, mlist_c, classes_c, Mhat);
@@ -41,8 +44,6 @@ double cmdl(NumericMatrix data, model** mlist,
   double value = 0.0;
   double df = 0.0;
   int n = data.nrow();
-
-  // NumericVector llconst = loglikelihood_const(data, mclass);
 
   for (int i = 0; i < n; i++)
     value += mlist[classes[i]]->loglikelihood(data(i, _));
@@ -74,7 +75,7 @@ model** model_drop_copy(model** mlist, model_class mclass,
 }
 
 IntegerVector redistribute(NumericMatrix data, model** mlist,
-                           IntegerVector classes, int target_m, int M) {
+                           IntegerVector classes, int target_m, int start_m, int end_m) {
   int n = classes.length();
   IntegerVector classes_c(n);
 
@@ -82,7 +83,7 @@ IntegerVector redistribute(NumericMatrix data, model** mlist,
     if (classes[i] < target_m)
       classes_c[i] = classes[i];
     if (classes[i] == target_m)
-      classes_c[i] = find_nearest(data(i, _), mlist, 0, M);
+      classes_c[i] = find_nearest(data(i, _), mlist, start_m, end_m);
     if (classes[i] > target_m)
       classes_c[i] = classes[i] - 1;
   }

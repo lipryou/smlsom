@@ -29,8 +29,8 @@ loglikelihood_const <- function(data, dtype) {
     .Call(`_smlsom_loglikelihood_const`, data, dtype)
 }
 
-eval_without <- function(target_m, data, parameters, classes, llconst, dtype) {
-    .Call(`_smlsom_eval_without`, target_m, data, parameters, classes, llconst, dtype)
+eval_without <- function(target_m, data, search_mrange, parameters, classes, llconst, dtype) {
+    .Call(`_smlsom_eval_without`, target_m, data, search_mrange, parameters, classes, llconst, dtype)
 }
 
 model_test1 <- function(A) {

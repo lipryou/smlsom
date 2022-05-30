@@ -121,7 +121,7 @@ IntegerVector classifsubc_within_class(NumericMatrix X, IntegerVector y,
 int find_nearest(NumericVector xi, model** mlist, int start_m, int end_m) {
   int nind = 0;
   int nearest = -1;
-  double dm = DOUBLE_XMAX;
+  double dm = DBL_MAX;
   double dist;
 
   // find 'winner' among  nodes

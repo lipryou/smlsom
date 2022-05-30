@@ -309,7 +309,7 @@ IntegerVector method_test2(NumericMatrix data, List parameters,
   model** mlist = model_import(parameters, model_class::mvnorm);
   model** mlist_c = model_drop_copy(mlist, model_class::mvnorm, M, target_m, p);
 
-  return redistribute(data, mlist_c, classes, target_m, Mhat);
+  return redistribute(data, mlist_c, classes, target_m, 0, Mhat);
 }
 
 // [[Rcpp::export]]

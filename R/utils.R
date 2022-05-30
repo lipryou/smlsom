@@ -51,3 +51,14 @@ dist_from_adj <- function(adjmatrix) {
 
     return(ddmat)
 }
+
+cumsum_rshift <- function(x, left=0) {
+    if (length(x) < 2)
+        stop("the length of x should be longer than 1")
+
+    x.cum <- cumsum(x)
+    x.cum[2:length(x)] <- x.cum[1:(length(x)-1)]
+    x.cum[1] <- left
+
+    return(x.cum)
+}

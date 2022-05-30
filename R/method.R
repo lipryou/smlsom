@@ -41,13 +41,38 @@ link_cutting <- function(beta, weights, adjmatrix) {
     return(adjmatrix)
 }
 
-which_delete <- function(X, current_map, classes, llconst, dtype, Mhat) {
+which_delete <- function(X, current_map, classes,
+                         llconst, dtype, M, nsubc) {
     cmdl <- classif_mdl(X, current_map, classes, llconst, dtype)
     cmdl.prev <- cmdl
     selected_m <- 0
     selected_map <- NULL
-    for (target_m in 1:Mhat) {
-        candidate_map <- eval_without(target_m-1, X, current_map, classes-1, llconst, dtype)
+
+    ## Determine start and end point for range of class search.
+    ## Usually, start is 0 and end point is the number of clusters.
+    ## However, if nsubc (Mk, the number of subclasses within class) is given,
+    ## it is subclass detection task, so the algorithm should search the
+    ## nearest subclass within the class which xi belongs to.
+    ## start_m and end_m are arguments of the cpp function `find_nearest`
+    ## to controll those search range.
+    if (missing(nsubc)) {
+        start_m <- rep(0, M)
+        end_m <- rep(M, M)
+    } else {
+        K <- length(nsubc)
+        start_m <- c(0, cumsum(nsubc[0:(K-1)]))
+        end_m <- cumsum(nsubc) - 1
+
+        names(start_m) <- 1:K
+        start_m <- rep(start_m, nsubc)
+        end_m <- rep(end_m, nsubc)
+    }
+
+    for (target_m in 1:M) {
+        mrange <- c(start_m[target_m], end_m[target_m])
+        if ((mrange[2] - mrange[1]) == 0) next
+        candidate_map <- eval_without(target_m-1, X, mrange, current_map,
+                                      classes-1, llconst, dtype)
         cmdl_c <- candidate_map$value
         if (cmdl > cmdl_c) {
             cmdl <- cmdl_c
@@ -69,6 +94,30 @@ accommodate_delete <- function(adjmatrix, selected_m) {
     adjmatrix <- adjmatrix[, -selected_m]
 
     return(adjmatrix)
+}
+
+loglikelihood.mvn <- function(X, Mus, Sigmas) {
+    if (ncol(X) != ncol(Mus))
+        stop("ncol(X) and ncol(Mus) should be equal")
+    if (ncol(X) != dim(Sigmas)[1L])
+        stop("ncol(X) and dim(Mus)[1] should be equal")
+    if (dim(Sigmas)[1L] != dim(Sigmas)[2L])
+        stop("Each Sigmas should be a square matrix")
+
+    M <- nrow(Mus)
+    mu_list <- list()
+    Sigma_list <- list()
+    for (m in 1:M) {
+        mu_list[[m]] <- Mus[m, ]
+        Sigma_list[[m]] <- Sigmas[,,m]
+    }
+
+    params <- list(M=M, mu=mu_list, Sigma=Sigma_list)
+    dtype <- match_dtype("mvnorm")
+    llconst <- loglikelihood_const(X, dtype)
+    logliks <- loglikelihood(X, params, llconst, dtype)
+
+    return(logliks)
 }
 
 ## =============================================================
