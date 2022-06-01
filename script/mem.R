@@ -125,7 +125,7 @@ params2 <- method_test1(params, target_m-1, p)
 ## method test2
 classes2 <- method_test2(A$X, params, classes-1, target_m-1) + 1
 ### check
-logliks_tmp <- loglikelihood(A$X, params2, dtype)
+logliks_tmp <- loglikelihood(A$X, params2, llconst, dtype)
 classes_tmp <- classes
 classes_tmp[classes > target_m] <- classes_tmp[classes > target_m] - 1
 classes_tmp[classes==target_m] <- apply(logliks_tmp[classes==target_m, ], 1, which.max)
@@ -138,7 +138,8 @@ mus <- by(A$X, classes, colMeans)
 Sigmas <- by(A$X, classes, function(x) (nrow(x)-1)/ nrow(x) * cov(x))
 
 ## eval_without
-candidate_map <- eval_without(target_m-1, A$X, params, classes-1, dtype)
+mrange <- c(0, params$M-1)
+candidate_map <- eval_without(target_m-1, A$X, mrange, params, classes-1, llconst, dtype)
 classes_c <- candidate_map$classes + 1
 cmdl <- classif_mdl(A$X, candidate_map, classes_c, dtype)
 cmdl - candidate_map$value
