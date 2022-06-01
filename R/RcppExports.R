@@ -49,6 +49,10 @@ model_test4 <- function(alpha, x, mu, Sigma) {
     .Call(`_smlsom_model_test4`, alpha, x, mu, Sigma)
 }
 
+model_test5 <- function(x, mu, Sigma) {
+    .Call(`_smlsom_model_test5`, x, mu, Sigma)
+}
+
 model_io_test1 <- function(parameters) {
     invisible(.Call(`_smlsom_model_io_test1`, parameters))
 }

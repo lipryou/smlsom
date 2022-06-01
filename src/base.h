@@ -16,7 +16,8 @@ using namespace Rcpp;
 enum class model_class
 {
   mvnorm,
-  multinom
+  multinom,
+  norms
 };
 
 model_class match_model_class(int);

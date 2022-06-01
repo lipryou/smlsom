@@ -8,7 +8,6 @@
 List eval_without(int target_m, NumericMatrix data,
                   IntegerVector search_mrange, List parameters,
                   IntegerVector classes, NumericVector llconst, int dtype) {
-  // nsubc, cumnsubc should be recalculated.
   int M = parameters["M"];
   int Mhat = M-1;
   int p = data.ncol();

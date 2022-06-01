@@ -79,7 +79,8 @@ mlsom.mvn <- function(data, Mus, Sigmas, nhbrdist,
         Sigmas[,,m] <- Sigma_list[[m]]
     }
 
-    logliks <- loglikelihood(data, params, dtype)
+    llconst <- loglikelihood_const(data, dtype)
+    logliks <- loglikelihood(data, params, llconst, dtype)
 
     classes <- apply(logliks, 1, which.max)
 
@@ -108,9 +109,14 @@ mlsom.mvn <- function(data, Mus, Sigmas, nhbrdist,
 smlsom.mvn <-
     function(data, xdim, ydim, beta=5, niter = nrow(data),
              Mus, Sigmas, alpha = c(0.05, 0.01),
-             radii = stats::quantile(nhbrdist,.67) * c(1, -1))
+             radii = stats::quantile(nhbrdist,.67) * c(1, -1),
+             cov.type = c("full", "diag"))
 {
-    dtype <- match_dtype("mvnorm")
+    cov.type <- match.arg(cov.type)
+    if (cov.type == "full")
+        dtype <- match_dtype("mvnorm")
+    else if (cov.type == "diag")
+        dtype <- match_dtype("norms")
 
     if (!is.numeric(data))
         stop("Argument data should be numeric")
@@ -160,10 +166,16 @@ smlsom.mvn <-
     ## create params
     mu_list <- list()
     Sigma_list <- list()
-    for (m in 1:M) {
+    for (m in 1:M)
         mu_list[[m]] <- Mus[m, ]
-        Sigma_list[[m]] <- Sigmas[,,m]
+    if (cov.type == "full") {
+        for (m in 1:M)
+            Sigma_list[[m]] <- Sigmas[,,m]
+    } else if (cov.type == "diag") {
+        for (m in 1:M)
+            Sigma_list[[m]] <- diag(Sigmas[,,m])
     }
+
     current_map <- list(M=M, mu=mu_list, Sigma=Sigma_list)
 
     llconst <- loglikelihood_const(data, dtype)
@@ -184,7 +196,13 @@ smlsom.mvn <-
 
     ## get estimated parameters
     Mus <- list_to_mvn.Mus(current_map)
-    Sigmas <- list_to_mvn.Sigmas(current_map)
+    if (cov.type == "full")
+        Sigmas <- list_to_mvn.Sigmas(current_map)
+    else if (cov.type == "diag") {
+        Sigmas <- array(0, dim=c(p, p, M))
+        for (m in 1:M)
+            Sigmas[,,m] <- diag(current_map$Sigma[[m]])
+    }
 
     logliks <- loglikelihood(data, current_map, llconst, dtype)
     classes <- apply(logliks, 1, which.max)
@@ -215,8 +233,13 @@ smlsom.mvn <-
 #'
 #' @export
 smlsom_clf.mvn <- function(X, y, K, Mk = 5, beta = 5, niter = nrow(data),
-                           Mus, Sigmas, alpha = c(0.05, 0.01), radii) {
-    dtype <- match_dtype("mvnorm")
+                           Mus, Sigmas, alpha = c(0.05, 0.01),
+                           radii, cov.type = c("full", "diag")) {
+    cov.type <- match.arg(cov.type)
+    if (cov.type == "full")
+        dtype <- match_dtype("mvnorm")
+    else if (cov.type == "diag")
+        dtype <- match_dtype("norms")
 
     if (!is.numeric(X))
         stop("Argument X should be numeric")
@@ -242,7 +265,7 @@ smlsom_clf.mvn <- function(X, y, K, Mk = 5, beta = 5, niter = nrow(data),
     if (missing(Mus)) {
         Mus <- matrix(0, M, p)
         for (m in 1:M)
-            Mus[m, ] <- X[sample(which(Y==subclasses[m]), 1), ]
+            Mus[m, ] <- X[sample(which(y==subclasses[m]), 1), ]
     } else {
         if (is.matrix(Mus))
             stop("Argument `Mus` should be matrix")
@@ -272,19 +295,24 @@ smlsom_clf.mvn <- function(X, y, K, Mk = 5, beta = 5, niter = nrow(data),
     }
 
     nhbrdist <- dist_from_adj(adjmatrix)
-    if (length(radii) == 1) {
-        radii <- sort(radii * c(1, -1), decreasing=TRUE)
-    } else {
+    if (missing(radii))
         radii <- stats::quantile(nhbrdist[nhbrdist!=Inf],.67) * c(1, -1)
-    }
+    if (length(radii) == 1)
+        radii <- sort(radii * c(1, -1), decreasing=TRUE)
 
     ## create params
     mu_list <- list()
     Sigma_list <- list()
-    for (m in 1:M) {
+    for (m in 1:M)
         mu_list[[m]] <- Mus[m, ]
-        Sigma_list[[m]] <- Sigmas[,,m]
+    if (cov.type == "full") {
+        for (m in 1:M)
+            Sigma_list[[m]] <- Sigmas[,,m]
+    } else if (cov.type == "diag") {
+        for (m in 1:M)
+            Sigma_list[[m]] <- diag(Sigmas[,,m])
     }
+
     current_map <- list(M=M, mu=mu_list, Sigma=Sigma_list)
 
     llconst <- loglikelihood_const(X, dtype)
@@ -310,7 +338,13 @@ smlsom_clf.mvn <- function(X, y, K, Mk = 5, beta = 5, niter = nrow(data),
     ## get estimated parameters
     cumnsubc <- cumsum_rshift(nsubc)
     Mus <- list_to_mvn.Mus(current_map)
-    Sigmas <- list_to_mvn.Sigmas(current_map)
+    if (cov.type == "full")
+        Sigmas <- list_to_mvn.Sigmas(current_map)
+    else if (cov.type == "diag") {
+        Sigmas <- array(0, dim=c(p, p, M))
+        for (m in 1:M)
+            Sigmas[,,m] <- diag(current_map$Sigma[[m]])
+    }
 
     logliks <- loglikelihood(X, current_map, llconst, dtype)
     classes <- classifsubc_within_class(X, y-1, nsubc, cumnsubc, current_map, dtype)

@@ -10,6 +10,9 @@ model** model_import(List parameters, model_class mclass) {
   case model_class::multinom:
     return model_import_multinomial(parameters);
 
+  case model_class::norms:
+    return model_import_norms(parameters);
+
   default:
     stop("model_class error: procedure for such class not exist");
   }
@@ -24,6 +27,9 @@ List model_export(model** mlist, int M, model_class mclass) {
   case model_class::multinom:
     return model_export_multinomial(mlist, M);
 
+  case model_class::norms:
+    return model_export_norms(mlist, M);
+
   default:
     stop("model_class error: procedure for such class not exist");
   }
@@ -37,6 +43,9 @@ model** model_dummy(model_class mclass, int M, int p) {
 
   case model_class::multinom:
     return model_dummy_multinomial(M, p);
+
+  case model_class::norms:
+    return model_dummy_norms(M, p);
 
   default:
     stop("model_class error: procedure for such class not exist");
@@ -77,6 +86,24 @@ model** model_import_multinomial(List parameters) {
   return mlist;
 }
 
+model** model_import_norms(List parameters) {
+  int M = parameters["M"];
+  List mu_list = parameters["mu"];
+  List sigma_list = parameters["Sigma"];
+
+  model** mlist = new model* [M];
+
+  for (int m = 0; m < M; m++) {
+    NumericVector mu = mu_list[m];
+    NumericVector sigma = sigma_list[m];
+
+    mlist[m] = new norms(mu, sigma);
+  }
+
+  return mlist;
+}
+
+
 // model export
 
 List model_export_gaussian(model** mlist, int M) {
@@ -104,6 +131,22 @@ List model_export_multinomial(model** mlist, int M) {
 
   return List::create(Named("M")=M, _["theta"]=theta_list);
 }
+
+List model_export_norms(model** mlist, int M) {
+  List tmp_list;
+  List mu_list = List::create();
+  List sigma_list = List::create();
+
+  for (int m = 0; m < M; m++) {
+    tmp_list = mlist[m]->get_parameters();
+    mu_list.push_back(tmp_list["mu"]);
+    sigma_list.push_back(tmp_list["Sigma"]);
+  }
+
+  return List::create(Named("M")=M, _["mu"]=mu_list, _["Sigma"]=sigma_list);
+}
+
+// model dummy
 
 model** model_dummy_gaussian(int M, int p) {
   List mu_list = List::create();
@@ -134,4 +177,23 @@ model** model_dummy_multinomial(int M, int p) {
 
   List params = List::create(Named("M")=M, _["theta"]=theta_list);
   return model_import_multinomial(params);
+}
+
+model** model_dummy_norms(int M, int p) {
+  List mu_list = List::create();
+  List sigma_list = List::create();
+
+  for (int m = 0; m < M; m++) {
+    NumericVector mu(p);
+    NumericVector sigma(p);
+
+    for (int j=0; j < p; j++) sigma[j] = 1;
+
+    mu_list.push_back(mu);
+    sigma_list.push_back(sigma);
+  }
+
+  List params = List::create(Named("M")=M, _["mu"]=mu_list, _["Sigma"]=sigma_list);
+
+  return model_import_norms(params);
 }

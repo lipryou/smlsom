@@ -188,6 +188,19 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// model_test5
+double model_test5(NumericVector x, NumericVector mu, NumericVector Sigma);
+RcppExport SEXP _smlsom_model_test5(SEXP xSEXP, SEXP muSEXP, SEXP SigmaSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericVector >::type x(xSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type mu(muSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type Sigma(SigmaSEXP);
+    rcpp_result_gen = Rcpp::wrap(model_test5(x, mu, Sigma));
+    return rcpp_result_gen;
+END_RCPP
+}
 // model_io_test1
 void model_io_test1(List parameters);
 RcppExport SEXP _smlsom_model_io_test1(SEXP parametersSEXP) {
@@ -336,6 +349,7 @@ static const R_CallMethodDef CallEntries[] = {
     {"_smlsom_model_test2", (DL_FUNC) &_smlsom_model_test2, 3},
     {"_smlsom_model_test3", (DL_FUNC) &_smlsom_model_test3, 5},
     {"_smlsom_model_test4", (DL_FUNC) &_smlsom_model_test4, 4},
+    {"_smlsom_model_test5", (DL_FUNC) &_smlsom_model_test5, 3},
     {"_smlsom_model_io_test1", (DL_FUNC) &_smlsom_model_io_test1, 1},
     {"_smlsom_model_io_test2", (DL_FUNC) &_smlsom_model_io_test2, 1},
     {"_smlsom_model_io_test3", (DL_FUNC) &_smlsom_model_io_test3, 2},

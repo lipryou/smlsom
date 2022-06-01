@@ -73,4 +73,31 @@ public:
   List get_parameters(void);
 };
 
+class norms : public model
+{
+public:
+  NumericVector mu;
+  NumericVector sigma;
+
+  norms(NumericVector m, NumericVector s) {
+    int p = m.length();
+
+    mu = m;
+    sigma = s;
+
+    df = 2*p;
+  }
+
+  double loglikelihood(NumericVector);
+
+  void update(List);
+
+  void mom_by_sample(NumericVector, double);
+
+  void batch(NumericMatrix);
+
+  List get_parameters(void);
+};
+
+
 #endif //INCLUDE_model_h_

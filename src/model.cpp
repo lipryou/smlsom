@@ -179,3 +179,70 @@ NumericMatrix choldc_inv(NumericMatrix A) {
 
   return L;
 }
+
+/*
+   m : mean vector
+   s : variance vector (sqrt(s_j) is sd)
+   log f (x | m, s) = log prod_j f(x_j | m_j, s_j)
+                    = sum_j log f(x_j | m_j, s_j)
+                    = sum_j log 1/sqrt(2*pi*s_j) * exp(- 0.5 * (x_j-m_j)^2 / s_j)
+                    = sum_j [-0.5 * log(2*pi) - 0.5 * log (s_j) - 0.5 * (x_j-m_j)^2 / s_j]
+*/
+double norms::loglikelihood(NumericVector x) {
+  double ll, tmp;
+  int p = x.length();
+
+  ll = 0.0;
+  for (int j = 0; j < p; j++) {
+    tmp = x[j] - mu[j];
+    ll += - 0.5 * log(sigma[j]) - 0.5 * (tmp*tmp / sigma[j]);
+  }
+
+  return ll;
+}
+
+void norms::update(List parameters) {
+  NumericVector m = parameters["mu"];
+  NumericVector s = parameters["Sigma"];
+
+  mu = m;
+  sigma = s;
+}
+
+
+void norms::mom_by_sample(NumericVector x, double alpha) {
+  NumericVector tmp;
+  NumericVector new_mu;
+  NumericVector new_sigma;
+
+  tmp = x - mu;
+
+  new_mu = mu + alpha * tmp;
+  new_sigma = sigma + alpha * ( (1-alpha) * (tmp*tmp) - sigma );
+
+  List parameters = List::create(Named("mu") = new_mu, _["Sigma"] = new_sigma);
+  update(parameters);
+}
+
+void norms::batch(NumericMatrix X) {
+  int n = X.nrow();
+  int p = X.ncol();
+
+  NumericVector new_mu(p);
+  NumericVector new_sigma(p);
+
+  for (int j = 0; j < p; j++)
+    new_mu[j] = sum(X(_, j)) / n;
+
+  for (int j = 0; j < p; j++) {
+    NumericVector tmp = X(_, j) - new_mu[j];
+    new_sigma[j] = 1.0 / n * sum(tmp * tmp);
+  }
+
+  List parameters = List::create(Named("mu") = new_mu, _["Sigma"] = new_sigma);
+  update(parameters);
+}
+
+List norms::get_parameters() {
+  return List::create(Named("mu") = mu, _["Sigma"] = sigma);
+}
