@@ -72,6 +72,11 @@ NumericVector loglikelihood_const(NumericMatrix data, int dtype) {
 
     return llconst;
 
+  case model_class::norms:
+    for (int i = 0; i < n; i++)
+      llconst[i] = (-1) * p / 2.0 * std::log(2*M_PI);
+    return llconst;
+
   default:
     stop("model_class error: procedure for such class not exist");
   }

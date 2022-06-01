@@ -57,7 +57,7 @@ which_delete <- function(X, current_map, classes,
     ## to controll those search range.
     if (missing(nsubc)) {
         start_m <- rep(0, M)
-        end_m <- rep(M, M)
+        end_m <- rep(M-1, M)
     } else {
         K <- length(nsubc)
         start_m <- c(0, cumsum(nsubc[0:(K-1)]))
@@ -90,8 +90,7 @@ accommodate_delete <- function(adjmatrix, selected_m) {
         adjmatrix[i, neighs[neighs != i]] <- 1
         adjmatrix[neighs[neighs != i], i] <- 1
     }
-    adjmatrix <- adjmatrix[-selected_m, ]
-    adjmatrix <- adjmatrix[, -selected_m]
+    adjmatrix <- adjmatrix[-selected_m, -selected_m]
 
     return(adjmatrix)
 }
@@ -131,6 +130,8 @@ classif_mdl <- function(data, parameters, classes, llconst, dtype) {
         df <- dof.mvn(p, M)
     else if (dtype == 1)
         df <- dof.multinom(p, M)
+    else if (dtype == 2)
+        df <- dof.norms(p, M)
     else {
         stop("dtype error: such class not implemented")
     }
@@ -148,6 +149,11 @@ dof.mvn <- function(p, M) {
 dof.multinom <- function(p, M) {
     return(M * (p-1))
 }
+
+dof.norms <- function(p, M) {
+    return(2*M*p)
+}
+
 
 ## =============================================================
 ##   functions for utils

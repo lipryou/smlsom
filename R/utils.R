@@ -1,10 +1,12 @@
-match_dtype <- function(model_type=c("mvnorm", "multinomial")) {
+match_dtype <- function(model_type=c("mvnorm", "multinomial", "norms")) {
     model_type <- match.arg(model_type)
 
     if (model_type == "mvnorm")
         dtype <- 0
     else if (model_type == "multinomial")
         dtype <- 1
+    else if (model_type == "norms")
+        dtype <- 2
 
     return(dtype)
 }

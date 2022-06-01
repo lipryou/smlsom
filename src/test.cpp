@@ -85,6 +85,24 @@ List model_test4(double alpha, NumericVector x,
 }
 
 // [[Rcpp::export]]
+double model_test5(NumericVector x, NumericVector mu, NumericVector Sigma) {
+  /*R--------------------------------
+    library(mvtnorm)
+
+    mu <- c(1, 2)
+    S <- diag(c(1, 1.5))
+
+    x <- c(0, 0)
+    dmvnorm(x, mu, S, log=T) + log(2*pi)
+    ---------------------------------
+  */
+
+  norms g (mu, Sigma);
+
+  return g.loglikelihood(x);
+}
+
+// [[Rcpp::export]]
 void model_io_test1(List parameters) {
   /*R--------------------------------
     M <- 2
