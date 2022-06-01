@@ -95,10 +95,12 @@ mlsom.mvn <- function(data, Mus, Sigmas, nhbrdist,
 #' @param data A numeric (n, p) matrix.
 #' @param xdim hogehoge
 #' @param ydim hogehoge
+#' @param beta hogehoge
 #' @param niter The number of iteration. Default is \code{nrow(data)}.
 #' @param Mus A numeric (M, p) matrix. The rows are the mean vector of each cluster. Default is to cluster \code{data} randomly.
 #' @param Sigmas A numeric (p, p, M) array. \code{Sigmas[,,m]} is the variance-covariance matrix of the mth cluster. Default is identity matrices.
 #' @param alpha Range of learning rates: \eqn{\alpha = (\alpha_1, \alpha_2)^t}. Note that \eqn{\alpha_1 > \alpha_2 > 0}. Monotonically decreasing from \eqn{\alpha_1} to \eqn{\alpha_2} for the number of iterations. Default is \code{alpha=c(0.05, 0.01)}. See \code{kohonen} package for details.
+#' @param radii Range of neighbourhood radius: \eqn{r = (r_1, r_2)^t}. Note that \eqn{r_1 > r_2 > 0}. Monotonically decreasing from \eqn{r_1} to \eqn{r_2} for the number of iterations. Default is to start with a value that covers 2/3 of node distances. See \code{kohonen} package for detals.
 #'
 #' @return hogehoge
 #'
@@ -194,6 +196,24 @@ smlsom.mvn <-
               class = "smlsom.mvn")
 }
 
+#' smlsom for classification problem using multivariate normals
+#'
+#' This function provides smlsom clustering.
+#'
+#' @param X A numeric (n, p) matrix.
+#' @param y class labels. n integer vector.
+#' @param K The number of classes.
+#' @param Mk The number of subclasses within each class.
+#' @param beta hogehoge
+#' @param niter The number of iteration. Default is \code{nrow(data)}.
+#' @param Mus A numeric (M, p) matrix. The rows are the mean vector of each cluster. Default is to cluster \code{data} randomly.
+#' @param Sigmas A numeric (p, p, M) array. \code{Sigmas[,,m]} is the variance-covariance matrix of the mth cluster. Default is identity matrices.
+#' @param alpha Range of learning rates: \eqn{\alpha = (\alpha_1, \alpha_2)^t}. Note that \eqn{\alpha_1 > \alpha_2 > 0}. Monotonically decreasing from \eqn{\alpha_1} to \eqn{\alpha_2} for the number of iterations. Default is \code{alpha=c(0.05, 0.01)}. See \code{kohonen} package for details.
+#' @param radii Range of neighbourhood radius: \eqn{r = (r_1, r_2)^t}. Note that \eqn{r_1 > r_2 > 0}. Monotonically decreasing from \eqn{r_1} to \eqn{r_2} for the number of iterations. Default is to start with a value that covers 2/3 of node distances. See \code{kohonen} package for detals.
+#'
+#' @return hogehoge
+#'
+#' @export
 smlsom_clf.mvn <- function(X, y, K, Mk = 5, beta = 5, niter = nrow(data),
                            Mus, Sigmas, alpha = c(0.05, 0.01), radii) {
     dtype <- match_dtype("mvnorm")
@@ -384,6 +404,17 @@ do_smlsom_clf <-
                 nsubc=nsubc, subclasses=subclasses))
 }
 
+#' prediction function for smlsom_clf.mvn
+#'
+#' This function provides smlsom clustering.
+#'
+#' @param object smlsom_clf.mvn object.
+#' @param newdata a numeric (n, p) matrix.
+#' @param type type of return. \code{class} gives a vector of length n whose elements are the classes with the largest posterior probability. \code{probability} provides the posterior probabilities matrix.
+#'
+#' @return hogehoge
+#'
+#' @export
 predict.smlsom_clf.mvn <-
     function(object, newdata, type=c("class", "probability"))
 {
