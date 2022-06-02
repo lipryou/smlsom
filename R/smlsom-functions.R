@@ -102,6 +102,7 @@ mlsom.mvn <- function(data, Mus, Sigmas, nhbrdist,
 #' @param Sigmas A numeric (p, p, M) array. \code{Sigmas[,,m]} is the variance-covariance matrix of the mth cluster. Default is identity matrices.
 #' @param alpha Range of learning rates: \eqn{\alpha = (\alpha_1, \alpha_2)^t}. Note that \eqn{\alpha_1 > \alpha_2 > 0}. Monotonically decreasing from \eqn{\alpha_1} to \eqn{\alpha_2} for the number of iterations. Default is \code{alpha=c(0.05, 0.01)}. See \code{kohonen} package for details.
 #' @param radii Range of neighbourhood radius: \eqn{r = (r_1, r_2)^t}. Note that \eqn{r_1 > r_2 > 0}. Monotonically decreasing from \eqn{r_1} to \eqn{r_2} for the number of iterations. Default is to start with a value that covers 2/3 of node distances. See \code{kohonen} package for detals.
+#' @param cov.type hogehoge
 #'
 #' @return hogehoge
 #'
@@ -228,11 +229,12 @@ smlsom.mvn <-
 #' @param Sigmas A numeric (p, p, M) array. \code{Sigmas[,,m]} is the variance-covariance matrix of the mth cluster. Default is identity matrices.
 #' @param alpha Range of learning rates: \eqn{\alpha = (\alpha_1, \alpha_2)^t}. Note that \eqn{\alpha_1 > \alpha_2 > 0}. Monotonically decreasing from \eqn{\alpha_1} to \eqn{\alpha_2} for the number of iterations. Default is \code{alpha=c(0.05, 0.01)}. See \code{kohonen} package for details.
 #' @param radii Range of neighbourhood radius: \eqn{r = (r_1, r_2)^t}. Note that \eqn{r_1 > r_2 > 0}. Monotonically decreasing from \eqn{r_1} to \eqn{r_2} for the number of iterations. Default is to start with a value that covers 2/3 of node distances. See \code{kohonen} package for detals.
+#' @param cov.type hogehoge
 #'
 #' @return hogehoge
 #'
 #' @export
-smlsom_clf.mvn <- function(X, y, K, Mk = 5, beta = 5, niter = nrow(data),
+smlsom_clf.mvn <- function(X, y, K, Mk = 5, beta = 5, niter = nrow(X),
                            Mus, Sigmas, alpha = c(0.05, 0.01),
                            radii, cov.type = c("full", "diag")) {
     cov.type <- match.arg(cov.type)
