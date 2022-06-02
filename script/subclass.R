@@ -46,6 +46,7 @@ cumnsubc <- cumsum_rshift(nsubc)
 
 mu_list <- list()
 Sigma_list <- list()
+set.seed(456)
 for (m in 1:M) {
     mu_list[[m]] <- X[sample(which(Y==subclasses[m]), 1), ]
     Sigma_list[[m]] <- diag(p)
@@ -64,9 +65,13 @@ for (k in 1:K) {
 Mus <- list_to_mvn.Mus(current_map)
 Sigmas <- list_to_mvn.Sigmas(current_map)
 
-plot(X, col=Y+1)
+par(mar=c(1,1,1,1))
+plot(X, col=Y+1, xlab="", ylab="", xaxt="n", yaxt="n")
 points(Mus, pch=16)
 draw.nl(Mus, adjmatrix)
+points(Q$Mu, pch=17, col="red")
+
+##########
 
 llconst <- loglikelihood_const(X, dtype)
 nhbrdist <- dist_from_adj(adjmatrix)
@@ -82,9 +87,9 @@ Sigmas <- list_to_mvn.Sigmas(current_map)
 
 plot(X, col=Y+1)
 points(Mus, pch=16)
-points(Q$Mu, pch=17)
 plot.ellipses(Mus, Sigmas, 1:M)
 draw.nl(Mus, adjmatrix)
+points(Q$Mu, pch=17, col="red")
 
 ## 2. link
 logliks <- loglikelihood(X, current_map, llconst, dtype)
@@ -94,11 +99,15 @@ weight <- link_weight(classes, logliks, adjmatrix)
 adjmatrix <- link_cutting(beta, weight, adjmatrix)
 
 ## plot
-plot(X, col=Y+1)
+png(file="smlsomDAproc01.png", width=6, height=6, units="in", res=300)
+
+par(mar=c(1,1,1,1))
+plot(X, col=Y+1, xlab="", ylab="", xaxt="n", yaxt="n")
 points(Mus, pch=16)
-points(Q$Mu, pch=17)
-plot.ellipses(Mus, Sigmas, 1:M)
 draw.nl(Mus, adjmatrix)
+points(Q$Mu, pch=17, col="red")
+
+dev.off()
 
 ## 3. node deletion
 
