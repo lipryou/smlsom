@@ -17,7 +17,7 @@ double gaussian::loglikelihood(NumericVector x) {
     for (int j = 0; j <= i; j++)
       tmp += invL(i, j) * (x[j] - mu[j]); //L^-1 (x-mu)
     exp += tmp * tmp;
-    logdet += log(invL(i, i));
+    logdet += std::log(invL(i, i));
   }
 
   return (logdet - 0.5 * exp);
@@ -32,28 +32,46 @@ void gaussian::update(List parameters) {
   invL = choldc_inv(s);
 }
 
-
+/*
 void gaussian::mom_by_sample(NumericVector x, double alpha) {
   int p = x.length();
   double delta;
-
   NumericVector tmp;
-  NumericVector new_mu;
-  NumericMatrix new_Sigma (p, p);
 
   tmp = x - mu;
-
-  new_mu = mu + alpha * tmp;
+  mu += alpha * tmp;
 
   for (int i = 0; i < p; i++) {
     for (int j = 0; j < p; j++) {
       delta = (1 - alpha) * tmp[i] * tmp[j] - Sigma(i, j);
-      new_Sigma(i, j) = Sigma(i, j) + alpha * delta;
+      Sigma(i, j) += alpha * delta;
     }
   }
 
-  List parameters = List::create(Named("mu") = new_mu, _["Sigma"] = new_Sigma);
-  update(parameters);
+  invL = choldc_inv(Sigma);
+}
+*/
+
+void gaussian::mom_by_sample(NumericVector x, double alpha) {
+  int p = x.length();
+  double delta;
+  NumericVector tmp;
+
+  tmp = x - mu;
+  mu += alpha * tmp;
+
+  for (int i = 0; i < p; i++)
+    Sigma(i, i) += alpha * ((1 - alpha) * tmp[i]*tmp[i] - Sigma(i, i));
+
+  for (int j = 0; j < p-1; j++) {
+    for (int i = j+1; i < p; i++) {
+      delta = (1 - alpha) * tmp[i] * tmp[j] - Sigma(i, j);
+      Sigma(i, j) += alpha * delta;
+      Sigma(j, i) = Sigma(i, j);
+    }
+  }
+
+  invL = choldc_inv(Sigma);
 }
 
 void gaussian::batch(NumericMatrix X) {
@@ -79,6 +97,44 @@ List gaussian::get_parameters() {
   return List::create(Named("mu") = mu, _["Sigma"] = Sigma);
 }
 
+NumericMatrix gaussian::choldc_inv(NumericMatrix A) {
+  // A should be n x n matrix
+
+  double sum;
+  int i, j, k;
+  int n = A.nrow();
+
+  // cholesky decomposition
+  for (i = 0; i < n; i++) {
+    for (j = 0; j < n; j++) {
+      sum = A(i, j);
+      for (k = i-1; k >= 0; k--)
+        sum -= L(i, k) * L(j, k);
+      if (i == j) {
+        if (sum <= 0) {
+          stop("'A' must be a positive definite.");
+        }
+        diagL[i] = std::sqrt(sum);
+      } else {
+        L(j, i) = sum / diagL[i];
+      }
+    }
+  }
+
+  // inverse L
+  for (i = 0; i < n; i++) {
+    L(i, i) = 1.0 / diagL[i];
+    for (j = i+1; j < n; j++) {
+      sum = 0.0;
+      for (k = i; k < j; k++)
+        sum -= L(j, k) * L(k, i);
+      L(j, i) = sum / diagL[j];
+    }
+  }
+
+  return L;
+}
+
 /*
    p : multinomial distribution parameter
    log f (x | p) = lgamma(sum_j(xj) + 1) - sum_j(lgamma(xj+1)) + sum_j (xj log(pj))
@@ -88,7 +144,7 @@ double multinomial::loglikelihood(NumericVector x) {
   double loglik = 0.0;
 
   for (int j = 0; j < x.length(); j++)
-    loglik += x[j] * log(theta[j]);
+    loglik += x[j] * std::log(theta[j]);
 
   return loglik;
 }
@@ -103,20 +159,18 @@ void multinomial::mom_by_sample(NumericVector x, double alpha) {
   double delta;
 
   double sum = 0.0;
-  NumericVector new_theta (p);
 
   for (int j = 0; j < p; j++) {
     sum += x[j];
   }
+
   if (sum == 0.0)
     return;
+
   for(int j = 0; j < p; j++) {
     delta = (x[j]) / sum - theta[j];
-    new_theta[j] = theta[j] + alpha * delta;
+    theta[j] += alpha * delta;
   }
-
-  List parameters = List::create(Named("theta") = new_theta);
-  update(parameters);
 }
 
 void multinomial::batch(NumericMatrix X) {
@@ -139,47 +193,6 @@ List multinomial::get_parameters() {
   return List::create(Named("theta") = theta);
 }
 
-NumericMatrix choldc_inv(NumericMatrix A) {
-  /* A should be n x n matrix */
-
-  double sum;
-  int i, j, k;
-  int n = A.nrow();
-
-  NumericMatrix L(n, n);
-  NumericVector diagL(n);
-
-  // cholesky decomposition
-  for (i = 0; i < n; i++) {
-    for (j = 0; j < n; j++) {
-      sum = A(i, j);
-      for (k = i-1; k >= 0; k--)
-        sum -= L(i, k) * L(j, k);
-      if (i == j) {
-        if (sum <= 0) {
-          stop("'A' must be a positive definite.");
-        }
-        diagL[i] = sqrt(sum);
-      } else {
-        L(j, i) = sum / diagL[i];
-      }
-    }
-  }
-
-  // inverse L
-  for (i = 0; i < n; i++) {
-    L(i, i) = 1.0 / diagL[i];
-    for (j = i+1; j < n; j++) {
-      sum = 0.0;
-      for (k = i; k < j; k++)
-        sum -= L(j, k) * L(k, i);
-      L(j, i) = sum / diagL[j];
-    }
-  }
-
-  return L;
-}
-
 /*
    m : mean vector
    s : variance vector (sqrt(s_j) is sd)
@@ -188,6 +201,7 @@ NumericMatrix choldc_inv(NumericMatrix A) {
                     = sum_j log 1/sqrt(2*pi*s_j) * exp(- 0.5 * (x_j-m_j)^2 / s_j)
                     = sum_j [-0.5 * log(2*pi) - 0.5 * log (s_j) - 0.5 * (x_j-m_j)^2 / s_j]
 */
+
 double norms::loglikelihood(NumericVector x) {
   double ll, tmp;
   int p = x.length();
@@ -195,7 +209,7 @@ double norms::loglikelihood(NumericVector x) {
   ll = 0.0;
   for (int j = 0; j < p; j++) {
     tmp = x[j] - mu[j];
-    ll += - 0.5 * log(sigma[j]) - 0.5 * (tmp*tmp / sigma[j]);
+    ll += - 0.5 * std::log(sigma[j]) - 0.5 * (tmp*tmp / sigma[j]);
   }
 
   return ll;
@@ -210,18 +224,26 @@ void norms::update(List parameters) {
 }
 
 
+/*
 void norms::mom_by_sample(NumericVector x, double alpha) {
   NumericVector tmp;
-  NumericVector new_mu;
-  NumericVector new_sigma;
 
   tmp = x - mu;
 
-  new_mu = mu + alpha * tmp;
-  new_sigma = sigma + alpha * ( (1-alpha) * (tmp*tmp) - sigma );
+  mu += alpha * tmp;
+  sigma += alpha * ( (1-alpha) * (tmp*tmp) - sigma );
+}
+*/
 
-  List parameters = List::create(Named("mu") = new_mu, _["Sigma"] = new_sigma);
-  update(parameters);
+void norms::mom_by_sample(NumericVector x, double alpha) {
+  double tmp;
+  int p = x.length();
+
+  for (int j = 0; j < p; j++) {
+    tmp = x[j] - mu[j];
+    mu[j] += alpha * tmp;
+    sigma[j] += alpha * ( (1-alpha) * (tmp*tmp) - sigma[j] );
+  }
 }
 
 void norms::batch(NumericMatrix X) {

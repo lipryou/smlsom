@@ -3,8 +3,6 @@
 
 #include "base.h"
 
-NumericMatrix choldc_inv(NumericMatrix);
-
 class model
 {
 public:
@@ -30,9 +28,19 @@ public:
   NumericVector mu;
   NumericMatrix Sigma;
   NumericMatrix invL;
+  NumericMatrix L;
+  NumericVector diagL;
+
+  gaussian(int p) {
+    L = NumericMatrix(Dimension(p, p));
+    diagL = NumericVector(p);
+  }
 
   gaussian(NumericVector m, NumericMatrix s) {
     int p = m.length();
+
+    L = NumericMatrix(Dimension(p, p));
+    diagL = NumericVector(p);
 
     mu = m;
     Sigma = s;
@@ -50,6 +58,8 @@ public:
   void batch(NumericMatrix);
 
   List get_parameters(void);
+
+  NumericMatrix choldc_inv(NumericMatrix);
 };
 
 class multinomial : public model

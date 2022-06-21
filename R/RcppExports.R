@@ -33,24 +33,20 @@ eval_without <- function(target_m, data, search_mrange, parameters, classes, llc
     .Call(`_smlsom_eval_without`, target_m, data, search_mrange, parameters, classes, llconst, dtype)
 }
 
-model_test1 <- function(A) {
-    .Call(`_smlsom_model_test1`, A)
+model_test1 <- function(x, mu, Sigma) {
+    .Call(`_smlsom_model_test1`, x, mu, Sigma)
 }
 
-model_test2 <- function(x, mu, Sigma) {
-    .Call(`_smlsom_model_test2`, x, mu, Sigma)
+model_test2 <- function(x, mu1, Sigma1, mu2, Sigma2) {
+    .Call(`_smlsom_model_test2`, x, mu1, Sigma1, mu2, Sigma2)
 }
 
-model_test3 <- function(x, mu1, Sigma1, mu2, Sigma2) {
-    .Call(`_smlsom_model_test3`, x, mu1, Sigma1, mu2, Sigma2)
+model_test3 <- function(alpha, x, mu, Sigma) {
+    .Call(`_smlsom_model_test3`, alpha, x, mu, Sigma)
 }
 
-model_test4 <- function(alpha, x, mu, Sigma) {
-    .Call(`_smlsom_model_test4`, alpha, x, mu, Sigma)
-}
-
-model_test5 <- function(x, mu, Sigma) {
-    .Call(`_smlsom_model_test5`, x, mu, Sigma)
+model_test4 <- function(x, mu, Sigma) {
+    .Call(`_smlsom_model_test4`, x, mu, Sigma)
 }
 
 model_io_test1 <- function(parameters) {
@@ -95,5 +91,13 @@ method_test2 <- function(data, parameters, classes, target_m) {
 
 method_test3 <- function(data, parameters, classes) {
     .Call(`_smlsom_method_test3`, data, parameters, classes)
+}
+
+cholinv_test1 <- function(A) {
+    .Call(`_smlsom_cholinv_test1`, A)
+}
+
+cholinv_test2 <- function(A) {
+    .Call(`_smlsom_cholinv_test2`, A)
 }
 

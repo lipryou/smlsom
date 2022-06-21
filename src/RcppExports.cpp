@@ -136,32 +136,21 @@ BEGIN_RCPP
 END_RCPP
 }
 // model_test1
-NumericMatrix model_test1(NumericMatrix A);
-RcppExport SEXP _smlsom_model_test1(SEXP ASEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< NumericMatrix >::type A(ASEXP);
-    rcpp_result_gen = Rcpp::wrap(model_test1(A));
-    return rcpp_result_gen;
-END_RCPP
-}
-// model_test2
-double model_test2(NumericVector x, NumericVector mu, NumericMatrix Sigma);
-RcppExport SEXP _smlsom_model_test2(SEXP xSEXP, SEXP muSEXP, SEXP SigmaSEXP) {
+double model_test1(NumericVector x, NumericVector mu, NumericMatrix Sigma);
+RcppExport SEXP _smlsom_model_test1(SEXP xSEXP, SEXP muSEXP, SEXP SigmaSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< NumericVector >::type x(xSEXP);
     Rcpp::traits::input_parameter< NumericVector >::type mu(muSEXP);
     Rcpp::traits::input_parameter< NumericMatrix >::type Sigma(SigmaSEXP);
-    rcpp_result_gen = Rcpp::wrap(model_test2(x, mu, Sigma));
+    rcpp_result_gen = Rcpp::wrap(model_test1(x, mu, Sigma));
     return rcpp_result_gen;
 END_RCPP
 }
-// model_test3
-double model_test3(NumericVector x, NumericVector mu1, NumericMatrix Sigma1, NumericVector mu2, NumericMatrix Sigma2);
-RcppExport SEXP _smlsom_model_test3(SEXP xSEXP, SEXP mu1SEXP, SEXP Sigma1SEXP, SEXP mu2SEXP, SEXP Sigma2SEXP) {
+// model_test2
+double model_test2(NumericVector x, NumericVector mu1, NumericMatrix Sigma1, NumericVector mu2, NumericMatrix Sigma2);
+RcppExport SEXP _smlsom_model_test2(SEXP xSEXP, SEXP mu1SEXP, SEXP Sigma1SEXP, SEXP mu2SEXP, SEXP Sigma2SEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -170,13 +159,13 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< NumericMatrix >::type Sigma1(Sigma1SEXP);
     Rcpp::traits::input_parameter< NumericVector >::type mu2(mu2SEXP);
     Rcpp::traits::input_parameter< NumericMatrix >::type Sigma2(Sigma2SEXP);
-    rcpp_result_gen = Rcpp::wrap(model_test3(x, mu1, Sigma1, mu2, Sigma2));
+    rcpp_result_gen = Rcpp::wrap(model_test2(x, mu1, Sigma1, mu2, Sigma2));
     return rcpp_result_gen;
 END_RCPP
 }
-// model_test4
-List model_test4(double alpha, NumericVector x, NumericVector mu, NumericMatrix Sigma);
-RcppExport SEXP _smlsom_model_test4(SEXP alphaSEXP, SEXP xSEXP, SEXP muSEXP, SEXP SigmaSEXP) {
+// model_test3
+List model_test3(double alpha, NumericVector x, NumericVector mu, NumericMatrix Sigma);
+RcppExport SEXP _smlsom_model_test3(SEXP alphaSEXP, SEXP xSEXP, SEXP muSEXP, SEXP SigmaSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
@@ -184,20 +173,20 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< NumericVector >::type x(xSEXP);
     Rcpp::traits::input_parameter< NumericVector >::type mu(muSEXP);
     Rcpp::traits::input_parameter< NumericMatrix >::type Sigma(SigmaSEXP);
-    rcpp_result_gen = Rcpp::wrap(model_test4(alpha, x, mu, Sigma));
+    rcpp_result_gen = Rcpp::wrap(model_test3(alpha, x, mu, Sigma));
     return rcpp_result_gen;
 END_RCPP
 }
-// model_test5
-double model_test5(NumericVector x, NumericVector mu, NumericVector Sigma);
-RcppExport SEXP _smlsom_model_test5(SEXP xSEXP, SEXP muSEXP, SEXP SigmaSEXP) {
+// model_test4
+double model_test4(NumericVector x, NumericVector mu, NumericVector Sigma);
+RcppExport SEXP _smlsom_model_test4(SEXP xSEXP, SEXP muSEXP, SEXP SigmaSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
     Rcpp::traits::input_parameter< NumericVector >::type x(xSEXP);
     Rcpp::traits::input_parameter< NumericVector >::type mu(muSEXP);
     Rcpp::traits::input_parameter< NumericVector >::type Sigma(SigmaSEXP);
-    rcpp_result_gen = Rcpp::wrap(model_test5(x, mu, Sigma));
+    rcpp_result_gen = Rcpp::wrap(model_test4(x, mu, Sigma));
     return rcpp_result_gen;
 END_RCPP
 }
@@ -335,6 +324,28 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// cholinv_test1
+NumericMatrix cholinv_test1(NumericMatrix A);
+RcppExport SEXP _smlsom_cholinv_test1(SEXP ASEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericMatrix >::type A(ASEXP);
+    rcpp_result_gen = Rcpp::wrap(cholinv_test1(A));
+    return rcpp_result_gen;
+END_RCPP
+}
+// cholinv_test2
+NumericMatrix cholinv_test2(NumericMatrix A);
+RcppExport SEXP _smlsom_cholinv_test2(SEXP ASEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericMatrix >::type A(ASEXP);
+    rcpp_result_gen = Rcpp::wrap(cholinv_test2(A));
+    return rcpp_result_gen;
+END_RCPP
+}
 
 static const R_CallMethodDef CallEntries[] = {
     {"_smlsom_mlsom", (DL_FUNC) &_smlsom_mlsom, 7},
@@ -345,11 +356,10 @@ static const R_CallMethodDef CallEntries[] = {
     {"_smlsom_classification_loglikelihood", (DL_FUNC) &_smlsom_classification_loglikelihood, 5},
     {"_smlsom_loglikelihood_const", (DL_FUNC) &_smlsom_loglikelihood_const, 2},
     {"_smlsom_eval_without", (DL_FUNC) &_smlsom_eval_without, 7},
-    {"_smlsom_model_test1", (DL_FUNC) &_smlsom_model_test1, 1},
-    {"_smlsom_model_test2", (DL_FUNC) &_smlsom_model_test2, 3},
-    {"_smlsom_model_test3", (DL_FUNC) &_smlsom_model_test3, 5},
-    {"_smlsom_model_test4", (DL_FUNC) &_smlsom_model_test4, 4},
-    {"_smlsom_model_test5", (DL_FUNC) &_smlsom_model_test5, 3},
+    {"_smlsom_model_test1", (DL_FUNC) &_smlsom_model_test1, 3},
+    {"_smlsom_model_test2", (DL_FUNC) &_smlsom_model_test2, 5},
+    {"_smlsom_model_test3", (DL_FUNC) &_smlsom_model_test3, 4},
+    {"_smlsom_model_test4", (DL_FUNC) &_smlsom_model_test4, 3},
     {"_smlsom_model_io_test1", (DL_FUNC) &_smlsom_model_io_test1, 1},
     {"_smlsom_model_io_test2", (DL_FUNC) &_smlsom_model_io_test2, 1},
     {"_smlsom_model_io_test3", (DL_FUNC) &_smlsom_model_io_test3, 2},
@@ -361,6 +371,8 @@ static const R_CallMethodDef CallEntries[] = {
     {"_smlsom_method_test1", (DL_FUNC) &_smlsom_method_test1, 3},
     {"_smlsom_method_test2", (DL_FUNC) &_smlsom_method_test2, 4},
     {"_smlsom_method_test3", (DL_FUNC) &_smlsom_method_test3, 3},
+    {"_smlsom_cholinv_test1", (DL_FUNC) &_smlsom_cholinv_test1, 1},
+    {"_smlsom_cholinv_test2", (DL_FUNC) &_smlsom_cholinv_test2, 1},
     {NULL, NULL, 0}
 };
 

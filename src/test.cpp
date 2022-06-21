@@ -3,20 +3,11 @@
 #include "clustering.h"
 #include "likelihood.h"
 #include "method.h"
+#include <chrono>
+
 
 // [[Rcpp::export]]
-NumericMatrix model_test1(NumericMatrix A) {
-  /*R--------------------------------
-    A <- matrix(c(3, 2, 2, 5), ncol=2)
-    solve(chol(A))
-    ---------------------------------
-  */
-
-  return choldc_inv(A);
-}
-
-// [[Rcpp::export]]
-double model_test2(NumericVector x, NumericVector mu, NumericMatrix Sigma) {
+double model_test1(NumericVector x, NumericVector mu, NumericMatrix Sigma) {
   /*R--------------------------------
     library(mvtnorm)
 
@@ -34,7 +25,7 @@ double model_test2(NumericVector x, NumericVector mu, NumericMatrix Sigma) {
 }
 
 // [[Rcpp::export]]
-double model_test3(NumericVector x,
+double model_test2(NumericVector x,
                     NumericVector mu1, NumericMatrix Sigma1,
                     NumericVector mu2, NumericMatrix Sigma2) {
   /*R--------------------------------
@@ -62,7 +53,7 @@ double model_test3(NumericVector x,
 }
 
 // [[Rcpp::export]]
-List model_test4(double alpha, NumericVector x,
+List model_test3(double alpha, NumericVector x,
                       NumericVector mu, NumericMatrix Sigma) {
   /*R--------------------------------
     mu <- c(1, 2)
@@ -85,7 +76,7 @@ List model_test4(double alpha, NumericVector x,
 }
 
 // [[Rcpp::export]]
-double model_test5(NumericVector x, NumericVector mu, NumericVector Sigma) {
+double model_test4(NumericVector x, NumericVector mu, NumericVector Sigma) {
   /*R--------------------------------
     library(mvtnorm)
 
@@ -339,4 +330,71 @@ List method_test3(NumericMatrix data, List parameters, IntegerVector classes) {
   model_batch(data, mlist, classes, M);
 
   return model_export(mlist, M, model_class::mvnorm);
+}
+
+// [[Rcpp::export]]
+NumericMatrix cholinv_test1(NumericMatrix A) {
+  double sum;
+  int i, j, k;
+  int n = A.nrow();
+  NumericVector diagL(n);
+
+  clock_t start, end;
+
+  NumericMatrix L(n, n);
+
+  start = clock();
+  // cholesky decomposition
+  for (i = 0; i < n; i++) {
+    for (j = 0; j < n; j++) {
+      sum = A(i, j);
+      for (k = i-1; k >= 0; k--)
+        sum -= L(i, k) * L(j, k);
+      if (i == j) {
+        if (sum <= 0) {
+          stop("'A' must be a positive definite.");
+        }
+        diagL[i] = std::sqrt(sum);
+      } else {
+        L(j, i) = sum / diagL[i];
+      }
+    }
+  }
+  end = clock();
+  printf("decomposition : %.8f sec\n",
+         ((double)end-start)/CLOCKS_PER_SEC);
+
+  // inverse L
+  start = clock();
+  for (i = 0; i < n; i++) {
+    L(i, i) = 1.0 / diagL[i];
+    for (j = i+1; j < n; j++) {
+      sum = 0.0;
+      for (k = i; k < j; k++)
+        sum -= L(j, k) * L(k, i);
+      L(j, i) = sum / diagL[j];
+    }
+  }
+  end = clock();
+  printf("solving       : %.8f sec\n",
+         ((double)end-start)/CLOCKS_PER_SEC);
+
+  return L;
+}
+
+// [[Rcpp::export]]
+NumericMatrix cholinv_test2(NumericMatrix A) {
+    Function test_choldc("chol");
+    Function test_solve("solve");
+
+    clock_t start, end;
+
+    start = clock();
+    NumericMatrix L = test_choldc(A);
+    L = test_solve(L);
+    end = clock();
+    printf("cholinv       : %.8f sec\n",
+           ((double)end-start)/CLOCKS_PER_SEC);
+
+    return L;
 }
