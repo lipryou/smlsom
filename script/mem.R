@@ -149,7 +149,7 @@ cmdl - candidate_map$value
 ## =========================================================
 
 ### data gen
-n <- 1000
+n <- 10000
 M <- 4
 p <- 2
 Q <- MixSim(BarOmega=0.05, K=M, p=p, int=c(-3, 3))
@@ -183,8 +183,10 @@ diag(adjmatrix) = 0
 llconst <- loglikelihood_const(X, dtype)
 
 ### 1. do mlsom
+tic()
 nhbrdist <- dist_from_adj(adjmatrix)
 current_map <- mlsom(X, current_map, dtype, niter, nhbrdist, alpha, radii)
+toc()
 
 #### plot
 Mus <- list_to_mvn.Mus(current_map)
@@ -196,11 +198,13 @@ plot.ellipses(Mus, Sigmas, 1:Mhat)
 draw.nl(Mus, adjmatrix)
 
 ### 2. link cutting
+tic()
 logliks <- loglikelihood(X, current_map, llconst, dtype)
 classes <- apply(logliks, 1, which.max)
 
 weight <- link_weight(classes, logliks, adjmatrix)
 adjmatrix <- link_cutting(beta, weight, adjmatrix)
+toc()
 
 #### plot
 plot(X, col=A$id+1)
@@ -211,9 +215,11 @@ draw.nl(Mus, adjmatrix)
 ### 3. node deletion
 
 #### 3-1. current mdl
+tic()
 selected_list <- which_delete(X, current_map, classes, llconst, dtype, Mhat)
 selected_m <- selected_list$selected_m
 selected_map <- selected_list$selected_map
+toc()
 
 #### 3-2. mdl without each node
 if (selected_m != 0) {
@@ -237,26 +243,61 @@ draw.nl(Mus, adjmatrix)
 ##    smlsom function for mvn
 ## =========================================================
 
-### experiment1.R
-load("test.Rdata")
+source("~/Document/Rfuncs/SMLSOM.R")
+library(mclust)
+devtools::load_all("..")
 
-#### plot
-Mhat <- ret1$M
-Mus <- ret1$Mus
-Sigmas <- ret1$Sigmas
-adjmatrix <- ret1$adjmatrix
+## mlsom speed
+system.time(u1 <- smlsom.mvn(X, 2, 2, init.type="random", tau=1))
+## 0.019
 
+set.seed(123)
+system.time(u2 <- mlsom.mvn(X, 2, 2, niter=1e+4, radii=0.5, cov.type="full"))
+## n=1e+4, p=21
+## mom_by_sample: 0.0006 - 0.00016
+## find_nearest: 0.00002
+
+system.time(u3 <- Mclust(X, G=4, modelNames="VVV"))
+
+## 0.085
+
+system.time(u1 <- usmlsom(X, 2, 2, init.type="random", tau=1, dtype="norm"))
+## 0.024
+
+system.time(u2 <- mlsom.mvn(X, 2, 2, niter=1e+4, cov.type="diag"))
+## 0.105 -> 0.066
+## find_nearest: x
+## radius, alpha: x
+## mom_by_sample: vec calc -> 0.066 -> 0.057
+
+### old
 plot(X, col=A$id+1)
-points(Mus, pch=16)
-plot.ellipses(Mus, Sigmas, 1:Mhat)
-draw.nl(Mus, adjmatrix)
+points(u1$mu1, pch=16)
 
-Mus2 <- ret2$mu1[ret2$lives, ]
-mu2 <- ret2$mu2[ret2$lives]
-Sigmas2 <- array(0, dim=c(p,p,ret2$nd))
-for (m in 1:ret2$nd)
-    Sigmas2[,,m] <- mu2[[m]] - Mus2[m, ] %*% t(Mus2[m, ])
-
+### new
 plot(X, col=A$id+1)
-points(Mus2, pch=16)
-plot.ellipses(Mus2, Sigmas2, 1:Mhat)
+points(u2$Mus, pch=16)
+plot.ellipses(u2$Mus, u2$Sigmas, 1:Mhat)
+
+system.time(u1 <- smlsom.mvn(X, 4, 3, init.type="random"))
+system.time(u2 <- smlsom::smlsom.mvn(X, 4, 3, niter=1e+4, cov.type="full"))
+print(u2$M)
+
+tmp <- MixSim(BarOmega=0.01, K=2, p=100)
+A <- tmp$S[,,1]
+system.time(L1 <- cholinv_test1(A))
+## using C code
+## decomposition : 0.01029200 sec
+## solving       : 0.00355400 sec
+## user  system elapsed
+## 0.015   0.000   0.014
+
+system.time(L2 <- cholinv_test2(A))
+## using R chol function
+## decomposition : 0.00505600 sec
+## solving       : 0.06357300 sec
+## user  system elapsed
+## 0.035   0.035   0.009
+system.time(L2 <- solve(chol(A)))
+
+other_test4(A)
