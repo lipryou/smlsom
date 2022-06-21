@@ -3,35 +3,40 @@
 #' This function provides mlsom clustering.
 #'
 #' @param data A numeric (n, p) matrix.
+#' @param xdim hogehoge
+#' @param ydim hogehoge
 #' @param niter The number of iteration. Default is \code{nrow(data)}.
 #' @param Mus A numeric (M, p) matrix. The rows are the mean vector of each cluster. Default is to cluster \code{data} randomly.
 #' @param Sigmas A numeric (p, p, M) array. \code{Sigmas[,,m]} is the variance-covariance matrix of the mth cluster. Default is identity matrices.
-#' @param nhbrdist Distance matrix between nodes. Note that "node" means a point in the SOM map space. Usually, a two-dimensional lattice space is used.
 #' @param alpha Range of learning rates: \eqn{\alpha = (\alpha_1, \alpha_2)^t}. Note that \eqn{\alpha_1 > \alpha_2 > 0}. Monotonically decreasing from \eqn{\alpha_1} to \eqn{\alpha_2} for the number of iterations. Default is \code{alpha=c(0.05, 0.01)}. See \code{kohonen} package for details.
 #' @param radii Range of neighbourhood radius: \eqn{r = (r_1, r_2)^t}. Note that \eqn{r_1 > r_2 > 0}. Monotonically decreasing from \eqn{r_1} to \eqn{r_2} for the number of iterations. Default is to start with a value that covers 2/3 of node distances. See \code{kohonen} package for detals.
+#' @param cov.type hogehoge
 #'
 #' @return hogehoge
 #'
 #' @export
-mlsom.mvn <- function(data, Mus, Sigmas, nhbrdist,
+mlsom.mvn <- function(data, xdim, ydim, Mus, Sigmas,
                       niter = nrow(data), alpha = c(0.05, 0.01),
-                      radii = stats::quantile(nhbrdist,.67) * c(1, -1))
+                      radii = stats::quantile(nhbrdist,.67) * c(1, -1),
+                      cov.type = c("full", "diag"))
 {
-    dtype <- match_dtype("mvnorm")
+    cov.type <- match.arg(cov.type)
+    if (cov.type == "full")
+        dtype <- match_dtype("mvnorm")
+    else if (cov.type == "diag")
+        dtype <- match_dtype("norms")
 
     if (!is.numeric(data))
         stop("Argument data should be numeric")
     if (!(is.matrix(data) | is.table(data)))
         stop("Argument data should be matrix or table")
 
-    if (!(is.matrix(nhbrdist)))
-        stop("Argument data should be matrix")
+    if ((length(xdim)==1) & (length(ydim)==1)) {
+        if (!(is.integer(xdim) | !(is.integer(ydim))))
+            stop("Argument xdim and ydim are should be scalar integer")
+    }
 
-    M <- nrow(nhbrdist)
-
-    if (ncol(nhbrdist) != M)
-        stop("Argument nhbrdist is not square")
-
+    M <- xdim * ydim
     n <- nrow(data)
     p <- ncol(data)
 
@@ -57,31 +62,43 @@ mlsom.mvn <- function(data, Mus, Sigmas, nhbrdist,
             stop("`Sigmas` should be p x p x M array")
     }
 
+    ## create som map
+    grid <- kohonen::somgrid(xdim, ydim, topo="h")
+    adjmatrix <- as.matrix(dist(grid$pts)) <= 1.5
+    diag(adjmatrix) = 0
+
+    nhbrdist <- dist_from_adj(adjmatrix)
     if (length(radii) == 1)
         radii <- sort(radii * c(1, -1), decreasing=TRUE)
 
-    ## initial parameter list
+    ## create params
     mu_list <- list()
     Sigma_list <- list()
-    for (m in 1:M) {
+    for (m in 1:M)
         mu_list[[m]] <- Mus[m, ]
-        Sigma_list[[m]] <- Sigmas[,,m]
+    if (cov.type == "full") {
+        for (m in 1:M)
+            Sigma_list[[m]] <- Sigmas[,,m]
+    } else if (cov.type == "diag") {
+        for (m in 1:M)
+            Sigma_list[[m]] <- diag(Sigmas[,,m])
     }
-    params_init <- list(M=M, mu=mu_list, Sigma=Sigma_list)
 
-    params <- mlsom(data, params_init, dtype, niter, nhbrdist, alpha, radii)
+    params_init <- list(M=M, mu=mu_list, Sigma=Sigma_list)
+    current_map <- mlsom(data, params_init, dtype, niter, nhbrdist, alpha, radii)
 
     ## get estimated parameters
-    mu_list <- params$mu
-    Sigma_list <- params$Sigma
-    for (m in 1:M) {
-        Mus[m, ] <- mu_list[[m]]
-        Sigmas[,,m] <- Sigma_list[[m]]
+    Mus <- list_to_mvn.Mus(current_map)
+    if (cov.type == "full")
+        Sigmas <- list_to_mvn.Sigmas(current_map)
+    else if (cov.type == "diag") {
+        Sigmas <- array(0, dim=c(p, p, M))
+        for (m in 1:M)
+            Sigmas[,,m] <- diag(current_map$Sigma[[m]])
     }
 
     llconst <- loglikelihood_const(data, dtype)
-    logliks <- loglikelihood(data, params, llconst, dtype)
-
+    logliks <- loglikelihood(data, current_map, llconst, dtype)
     classes <- apply(logliks, 1, which.max)
 
     structure(list(Mus=Mus, Sigmas=Sigmas, logliks=logliks, classes=classes,
