@@ -44,7 +44,7 @@ mlsom.mvn <- function(data, xdim, ydim, Mus, Sigmas,
         cl <- sample(1:M, n, replace=T)
         Mus <- as.matrix(stats::aggregate(data, by=list(cl), mean)[,-1])
     } else {
-        if (is.matrix(Mus))
+        if (!is.matrix(Mus))
             stop("Argument `Mus` should be matrix")
         if (nrow(Mus) != M)
             stop("The number of rows of `Mus` is not equal to M")
@@ -56,9 +56,9 @@ mlsom.mvn <- function(data, xdim, ydim, Mus, Sigmas,
         for (m in 1:M)
             Sigmas[,,m] <- diag(1,p)
     } else {
-        if (is.array(Sigmas))
+        if (!is.array(Sigmas))
             stop("Argument `Sigmas` should be array")
-        if (all(dim(Sigmas) == c(p, p, M)))
+        if (all(dim(Sigmas) != c(p, p, M)))
             stop("`Sigmas` should be p x p x M array")
     }
 
@@ -128,7 +128,7 @@ smlsom.mvn <-
     function(data, xdim, ydim, beta=5, niter = nrow(data),
              Mus, Sigmas, alpha = c(0.05, 0.01),
              radii = stats::quantile(nhbrdist,.67) * c(1, -1),
-             cov.type = c("full", "diag"))
+             cov.type = c("full", "diag"), verbose=F)
 {
     cov.type <- match.arg(cov.type)
     if (cov.type == "full")
@@ -154,7 +154,7 @@ smlsom.mvn <-
         cl <- sample(1:M, n, replace=T)
         Mus <- as.matrix(stats::aggregate(data, by=list(cl), mean)[,-1])
     } else {
-        if (is.matrix(Mus))
+        if (!is.matrix(Mus))
             stop("Argument `Mus` should be matrix")
         if (nrow(Mus) != M)
             stop("The number of rows of `Mus` is not equal to M")
@@ -166,9 +166,9 @@ smlsom.mvn <-
         for (m in 1:M)
             Sigmas[,,m] <- diag(1,p)
     } else {
-        if (is.array(Sigmas))
+        if (!is.array(Sigmas))
             stop("Argument `Sigmas` should be array")
-        if (all(dim(Sigmas) == c(p, p, M)))
+        if (all(dim(Sigmas) != c(p, p, M)))
             stop("`Sigmas` should be p x p x M array")
     }
 
