@@ -58,7 +58,7 @@ mlsom.mvn <- function(data, xdim, ydim, Mus, Sigmas,
     } else {
         if (!is.array(Sigmas))
             stop("Argument `Sigmas` should be array")
-        if (all(dim(Sigmas) != c(p, p, M)))
+        if (any(dim(Sigmas) != c(p, p, M)))
             stop("`Sigmas` should be p x p x M array")
     }
 
@@ -168,7 +168,7 @@ smlsom.mvn <-
     } else {
         if (!is.array(Sigmas))
             stop("Argument `Sigmas` should be array")
-        if (all(dim(Sigmas) != c(p, p, M)))
+        if (any(dim(Sigmas) != c(p, p, M)))
             stop("`Sigmas` should be p x p x M array")
     }
 
@@ -199,8 +199,11 @@ smlsom.mvn <-
     llconst <- loglikelihood_const(data, dtype)
 
     while(M > 1) {
+        if (verbose)
+            cat(sprintf("Current M = %d\n", M))
+
         result <- do_smlsom(data, current_map, adjmatrix, nhbrdist,
-                            beta, niter, alpha, radii, llconst, dtype)
+                            beta, niter, alpha, radii, llconst, dtype, verbose)
         current_map <- result$current_map
         adjmatrix_new <- result$adjmatrix
 
@@ -286,7 +289,7 @@ smlsom_clf.mvn <- function(X, y, K, Mk = 5, beta = 5, niter = nrow(X),
         for (m in 1:M)
             Mus[m, ] <- X[sample(which(y==subclasses[m]), 1), ]
     } else {
-        if (is.matrix(Mus))
+        if (!is.matrix(Mus))
             stop("Argument `Mus` should be matrix")
         if (nrow(Mus) != M)
             stop("The number of rows of `Mus` is not equal to M")
@@ -298,9 +301,9 @@ smlsom_clf.mvn <- function(X, y, K, Mk = 5, beta = 5, niter = nrow(X),
         for (m in 1:M)
             Sigmas[,,m] <- diag(1,p)
     } else {
-        if (is.array(Sigmas))
+        if (!is.array(Sigmas))
             stop("Argument `Sigmas` should be array")
-        if (all(dim(Sigmas) == c(p, p, M)))
+        if (any(dim(Sigmas) != c(p, p, M)))
             stop("`Sigmas` should be p x p x M array")
     }
 
@@ -337,10 +340,13 @@ smlsom_clf.mvn <- function(X, y, K, Mk = 5, beta = 5, niter = nrow(X),
     llconst <- loglikelihood_const(X, dtype)
 
     while(M > 1) {
+        if (verbose)
+            cat(sprintf("Current M = %d\n", M))
+
         cumnsubc <- cumsum_rshift(nsubc)
 
         result <- do_smlsom_clf(X, y, subclasses, nsubc, cumnsubc, current_map, adjmatrix,
-                                nhbrdist, beta, niter, alpha, radii, llconst, dtype)
+                                nhbrdist, beta, niter, alpha, radii, llconst, dtype, verbose)
         current_map <- result$current_map
         adjmatrix_new <- result$adjmatrix
         nsubc <- result$nsubc
@@ -385,7 +391,7 @@ smlsom_clf.mvn <- function(X, y, K, Mk = 5, beta = 5, niter = nrow(X),
 
 do_smlsom <-
     function(data, current_map, adjmatrix, nhbrdist,
-             beta, niter, alpha, radii, llconst, dtype)
+             beta, niter, alpha, radii, llconst, dtype, verbose)
 {
     M <- current_map$M
 
@@ -397,6 +403,11 @@ do_smlsom <-
     logliks <- loglikelihood(data, current_map, llconst, dtype)
     classes <- apply(logliks, 1, which.max)
 
+    if(verbose) {
+        cat(" Distribution of cluster sizes\n")
+        print(summary(as.vector(table(classes))))
+    }
+
     current_map <- onebatch(data, current_map, classes-1, dtype)
 
     weight <- link_weight(classes, logliks, adjmatrix)
@@ -406,6 +417,10 @@ do_smlsom <-
     selected_list <- which_delete(data, current_map, classes, llconst, dtype, M)
     selected_m <- selected_list$selected_m
     selected_map <- selected_list$selected_map
+
+    if (verbose)
+        cat(sprintf(" current_mdl = %.3f previous mdl = %.3f\n",
+                selected_list$cmdl, selected_list$cmdl.prev))
 
     ## map update.
     if (selected_m != 0) {
@@ -420,7 +435,7 @@ do_smlsom <-
 do_smlsom_clf <-
     function(X, Y, subclasses, nsubc, cumnsubc,
              current_map, adjmatrix, nhbrdist,
-             beta, niter, alpha, radii, llconst, dtype)
+             beta, niter, alpha, radii, llconst, dtype, verbose)
 {
     M <- current_map$M
 
@@ -431,6 +446,11 @@ do_smlsom_clf <-
     logliks <- loglikelihood(X, current_map, llconst, dtype)
     classes <- classifsubc_within_class(X, Y-1, nsubc, cumnsubc, current_map, dtype)
 
+    if(verbose) {
+        cat(" Distribution of cluster sizes\n")
+        print(summary(as.vector(table(classes))))
+    }
+
     weight <- link_weight(classes, logliks, adjmatrix)
     adjmatrix <- link_cutting(beta, weight, adjmatrix)
 
@@ -438,6 +458,10 @@ do_smlsom_clf <-
     selected_list <- which_delete(X, current_map, classes, llconst, dtype, M, nsubc)
     selected_m <- selected_list$selected_m
     selected_map <- selected_list$selected_map
+
+    if (verbose)
+        cat(sprintf(" current_mdl = %.3f previous mdl = %.3f\n",
+                    selected_list$cmdl, selected_list$cmdl.prev))
 
     ## map update.
     if (selected_m != 0) {
