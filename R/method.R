@@ -27,8 +27,9 @@ link_cutting <- function(beta, weights, adjmatrix) {
     active_nodes <- which(apply(adjmatrix==1, 1, any))
 
     ## threshold
-    h <- max(-diag(weights))
+    ## h <- max(-diag(weights))
     ## h <- ifelse(h < 0, 0.1, h) ## necessary?
+    h <- abs(min(diag(weights)))
 
     for (m in active_nodes) {
         Dml <- weights[m, ]
@@ -93,6 +94,19 @@ accommodate_delete <- function(adjmatrix, selected_m) {
     adjmatrix <- adjmatrix[-selected_m, -selected_m]
 
     return(adjmatrix)
+}
+
+remove_node <- function(current_map, node_m, dtype) {
+    current_map$M <- current_map$M - length(node_m)
+
+    if (dtype == 0 || dtype == 2) {
+        current_map$mu <- current_map$mu[-node_m]
+        current_map$Sigma <- current_map$Sigma[-node_m]
+    }
+    else if (dtype == 1)
+        current_map$theta <- current_map$theta[-node_m]
+
+    return(current_map)
 }
 
 loglikelihood.mvn <- function(X, Mus, Sigmas) {

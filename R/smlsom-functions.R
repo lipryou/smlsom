@@ -207,8 +207,9 @@ smlsom.mvn <-
         current_map <- result$current_map
         adjmatrix_new <- result$adjmatrix
 
-        if (all(dim(adjmatrix) == dim(adjmatrix_new)))
-            break
+        if (M == current_map$M)
+            if (all(adjmatrix == adjmatrix_new))
+                break
 
         adjmatrix <- adjmatrix_new
         nhbrdist <- dist_from_adj(adjmatrix)
@@ -403,9 +404,25 @@ do_smlsom <-
     logliks <- loglikelihood(data, current_map, llconst, dtype)
     classes <- apply(logliks, 1, which.max)
 
+    ## NOTE: This procedure is not included in the paper.
+    tb.cl <- table(factor(classes, 1:M))
+    del_nodes <- which(tb.cl < 5)
+
+    if (length(del_nodes) > 0) {
+        if (verbose) cat(" Delete clusters with few samples:", del_nodes, "\n")
+
+        current_map <- remove_node(current_map, del_nodes, dtype)
+
+        deletes <- del_nodes - 0:(length(del_nodes)-1)  ## for accommodate_delete
+        for (m in deletes)
+            adjmatrix <- accommodate_delete(adjmatrix, m)
+
+        return(list(current_map=current_map, adjmatrix=adjmatrix))
+    }
+
     if(verbose) {
-        cat(" Distribution of cluster sizes\n")
-        print(summary(as.vector(table(classes))))
+        cat(" Distribution of average log-likelihoods within clusters\n")
+        print(summary(tapply(apply(logliks, 1, max), classes, mean)))
     }
 
     current_map <- onebatch(data, current_map, classes-1, dtype)
