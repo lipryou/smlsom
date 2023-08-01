@@ -23,8 +23,9 @@ mlsom.mvn <- function(data, xdim, ydim, Mus, Sigmas,
     cov.type <- match.arg(cov.type)
     if (cov.type == "full")
         dtype <- match_dtype("mvnorm")
-    else if (cov.type == "diag")
+    else if (cov.type == "diag") {
         dtype <- match_dtype("norms")
+    }
 
     if (!is.numeric(data))
         stop("Argument data should be numeric")
@@ -394,6 +395,7 @@ do_smlsom <-
     function(data, current_map, adjmatrix, nhbrdist,
              beta, niter, alpha, radii, llconst, dtype, verbose)
 {
+    p <- ncol(data)
     M <- current_map$M
 
     ## mlsom
@@ -406,18 +408,35 @@ do_smlsom <-
 
     ## NOTE: This procedure is not included in the paper.
     tb.cl <- table(factor(classes, 1:M))
-    del_nodes <- which(tb.cl < 5)
+    del_nodes <- which(tb.cl < (get_dof(M, p, dtype) / M))
 
-    if (length(del_nodes) > 0) {
-        if (verbose) cat(" Delete clusters with few samples:", del_nodes, "\n")
+    if(verbose) {
+        cat(" Cluster sizes")
+        print(tb.cl)
+    }
 
-        current_map <- remove_node(current_map, del_nodes, dtype)
+    while(length(del_nodes) > 0 & M > 1) {
+        selected_m <- which.min(tb.cl)
 
-        deletes <- del_nodes - 0:(length(del_nodes)-1)  ## for accommodate_delete
-        for (m in deletes)
-            adjmatrix <- accommodate_delete(adjmatrix, m)
+        if (verbose) cat(" Delete cluster with few samples:", selected_m, min(tb.cl), "\n")
 
-        return(list(current_map=current_map, adjmatrix=adjmatrix))
+        ## remove minimum size cluster
+        current_map <- remove_node(current_map, selected_m, dtype)
+        adjmatrix <- accommodate_delete(adjmatrix, selected_m)
+
+        ## re-distribute samples
+        logliks <- loglikelihood(data, current_map, llconst, dtype)
+        classes <- apply(logliks, 1, which.max)
+        current_map <- onebatch(data, current_map, classes-1, dtype)
+
+        M <- M - 1
+
+        ## investigate again
+        tb.cl <- table(factor(classes, 1:M))
+        del_nodes <- which(tb.cl < (get_dof(M, p, dtype) / M))
+
+        if (length(del_nodes) == 0)
+            return(list(current_map=current_map, adjmatrix=adjmatrix))
     }
 
     if(verbose) {

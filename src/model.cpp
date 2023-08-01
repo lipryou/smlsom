@@ -32,44 +32,15 @@ void gaussian::update(List parameters) {
   invL = choldc_inv(s);
 }
 
-/*
 void gaussian::mom_by_sample(NumericVector x, double alpha) {
   int p = x.length();
-  double delta;
   NumericVector tmp;
 
   tmp = x - mu;
   mu += alpha * tmp;
 
-  for (int i = 0; i < p; i++) {
-    for (int j = 0; j < p; j++) {
-      delta = (1 - alpha) * tmp[i] * tmp[j] - Sigma(i, j);
-      Sigma(i, j) += alpha * delta;
-    }
-  }
-
-  invL = choldc_inv(Sigma);
-}
-*/
-
-void gaussian::mom_by_sample(NumericVector x, double alpha) {
-  int p = x.length();
-  double delta;
-  NumericVector tmp;
-
-  tmp = x - mu;
-  mu += alpha * tmp;
-
-  for (int i = 0; i < p; i++)
-    Sigma(i, i) += alpha * ((1 - alpha) * tmp[i]*tmp[i] - Sigma(i, i));
-
-  for (int j = 0; j < p-1; j++) {
-    for (int i = j+1; i < p; i++) {
-      delta = (1 - alpha) * tmp[i] * tmp[j] - Sigma(i, j);
-      Sigma(i, j) += alpha * delta;
-      Sigma(j, i) = Sigma(i, j);
-    }
-  }
+  for (int j = 0; j < p; j++)
+    Sigma(_, j) = (1 - alpha) * Sigma(_, j) + alpha * (1 - alpha) * tmp * tmp[j];
 
   invL = choldc_inv(Sigma);
 }
@@ -90,12 +61,26 @@ void gaussian::batch(NumericMatrix X) {
   }
 
   List parameters = List::create(Named("mu") = new_mu, _["Sigma"] = new_Sigma);
+
   update(parameters);
 }
 
 List gaussian::get_parameters() {
   return List::create(Named("mu") = mu, _["Sigma"] = Sigma);
 }
+
+/*
+NumericMatrix gaussian::choldc_inv(NumericMatrix A) {
+  NumericMatrix L;
+
+  Function chol("chol");
+  Function solve("solve");
+
+  L = solve(chol(A));
+
+  return transpose(L);
+}
+*/
 
 NumericMatrix gaussian::choldc_inv(NumericMatrix A) {
   // A should be n x n matrix

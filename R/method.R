@@ -137,9 +137,7 @@ loglikelihood.mvn <- function(X, Mus, Sigmas) {
 ##   functions for mdl calculation
 ## =============================================================
 
-classif_mdl <- function(data, parameters, classes, llconst, dtype) {
-    p <- ncol(data)
-    M <- parameters$M
+get_dof <- function(M, p, dtype) {
     if (dtype == 0)
         df <- dof.mvn(p, M)
     else if (dtype == 1)
@@ -149,6 +147,15 @@ classif_mdl <- function(data, parameters, classes, llconst, dtype) {
     else {
         stop("dtype error: such class not implemented")
     }
+
+    return(df)
+}
+
+classif_mdl <- function(data, parameters, classes, llconst, dtype) {
+    p <- ncol(data)
+    M <- parameters$M
+
+    df <- get_dof(M, p, dtype)
 
     n <- nrow(data)
     logliks_c <- classification_loglikelihood(data, parameters, classes-1, llconst, dtype)

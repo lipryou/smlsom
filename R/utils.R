@@ -41,6 +41,8 @@ LinearInit <- function(data, xdim=8, ydim=6) {
 }
 
 dist_from_adj <- function(adjmatrix) {
+    if (length(adjmatrix) == 1)
+        return(0)
     M <- nrow(adjmatrix)
     mat <- matrix(as.integer(adjmatrix), nrow=M)
     A <- mat
